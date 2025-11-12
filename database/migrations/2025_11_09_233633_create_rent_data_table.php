@@ -30,16 +30,16 @@ return new class extends Migration
             $table->string('construction_period')->index();
 
             // Type de location (e.g., "meublé", "non meublé")
-            $table->enum('rental_type', ['furniture', 'non_furniture'])->index();
+            $table->boolean('rental_type')->default(true)->index();
 
             // Loyers de référence (average rent in €/m²)
             $table->bigInteger('reference_rent')->nullable();
 
             // Loyers de référence majorés (maximum rent in €/m²)
-            $table->bigInteger('maximum_rent')->nullable();
+            $table->bigInteger('maximum_rent')->nullable()->index();
 
             // Loyers de référence minorés (minimum rent in €/m²)
-            $table->bigInteger('minimum_rent')->nullable();
+            $table->bigInteger('minimum_rent')->nullable()->index();
 
             // Année
             $table->year('year')->index();
@@ -48,12 +48,6 @@ return new class extends Migration
             $table->string('city')->default('PARIS');
 
             $table->timestamps();
-
-            // Foreign key constraint
-            $table->foreign('district_number')
-                  ->references('district_number')
-                  ->on('districts')
-                  ->onDelete('cascade');
 
             // Composite index for common queries
             $table->index(['district_number', 'number_of_rooms', 'construction_period', 'rental_type'], 'rent_search_index');

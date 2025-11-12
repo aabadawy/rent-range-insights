@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class District extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'district_section_number',  // N_SQ_QU - Numéro de section de quartier
         'district_number',          // Numéro du quartier / C_QU
@@ -20,7 +23,6 @@ class District extends Model
         'borough_section_number',  // N_SQ_AR - Numéro de section de l'arrondissement
         'perimeter',               // PERIMETRE - Périmètre
         'surface_area',            // SURFACE - Surface
-        'geometry_coordinates',    // Geometry X Y - Géométrie X Y
         'latitude',                // Latitude
         'longitude',               // Longitude
         'postal_code',             // ZIP CODE - Code postal
@@ -50,7 +52,7 @@ class District extends Model
     public function boundaries(): HasMany
     {
         return $this->hasMany(DistrictBoundary::class, 'district_number', 'district_number')
-                    ->orderBy('sequence_order');
+            ->orderBy('sequence_order');
     }
 
     /**
@@ -68,6 +70,6 @@ class District extends Model
     public function scopeByCoordinates($query, float $latitude, float $longitude, float $radius = 0.01)
     {
         return $query->whereBetween('latitude', [$latitude - $radius, $latitude + $radius])
-                     ->whereBetween('longitude', [$longitude - $radius, $longitude + $radius]);
+            ->whereBetween('longitude', [$longitude - $radius, $longitude + $radius]);
     }
 }

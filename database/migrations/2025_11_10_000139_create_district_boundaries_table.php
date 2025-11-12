@@ -28,12 +28,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // Foreign key constraint
-            $table->foreign('district_number')
-                  ->references('district_number')
-                  ->on('districts')
-                  ->onDelete('cascade');
-
             // Index for efficient polygon queries
             $table->index(['district_number', 'sequence_order']);
         });

@@ -7,7 +7,7 @@ use App\Enums\Currency;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Support\Arrayable;
 
-class Money implements Castable, Arrayable
+class Money implements Arrayable, Castable
 {
     protected int $amount;
 
@@ -22,7 +22,7 @@ class Money implements Castable, Arrayable
         $this->convertAmountToInt($amount);
     }
 
-    public function value():float|int
+    public function value(): float
     {
         return $this->amount / self::ROUND;
     }
@@ -36,6 +36,7 @@ class Money implements Castable, Arrayable
     {
         if (is_int($amount)) {
             $this->amount = $amount;
+
             return;
         }
 

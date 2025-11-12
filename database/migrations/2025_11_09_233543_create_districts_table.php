@@ -33,13 +33,11 @@ return new class extends Migration
             $table->string('borough_section_number');
 
             // PERIMETRE - Périmètre du quartier (meters)
-            $table->decimal('perimeter', 12, 8)->nullable();
+            $table->string('perimeter')->nullable();
 
             // SURFACE - Surface du quartier (square meters)
             $table->decimal('surface_area', 15, 8)->nullable();
 
-            // Geometry X Y - Géométrie X Y (Latitude, Longitude)
-            $table->string('geometry_coordinates')->nullable();
             $table->decimal('latitude', 10, 8)->nullable()->index();
             $table->decimal('longitude', 11, 8)->nullable()->index();
 

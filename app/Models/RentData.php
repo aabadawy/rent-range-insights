@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\ValueObjects\Money;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class RentData extends Model
 {
+    use HasFactory;
+
     protected $table = 'rent_data';
 
     protected $fillable = [
@@ -30,9 +34,9 @@ class RentData extends Model
     protected $casts = [
         'district_number' => 'integer',
         'number_of_rooms' => 'integer',
-        'reference_rent' => 'decimal:2',
-        'maximum_rent' => 'decimal:2',
-        'minimum_rent' => 'decimal:2',
+        'reference_rent' => Money::class,
+        'maximum_rent' => Money::class,
+        'minimum_rent' => Money::class,
         'year' => 'integer',
     ];
 
@@ -63,11 +67,13 @@ class RentData extends Model
 
     /**
      * Scope to filter by rental type
-     * @param bool $furnished true for "meublé", false for "non meublé"
+     *
+     * @param  bool  $furnished  true for "meublé", false for "non meublé"
      */
     public function scopeByFurnished($query, bool $furnished)
     {
         $rentalType = $furnished ? 'meublé' : 'non meublé';
+
         return $query->where('rental_type', $rentalType);
     }
 
@@ -77,6 +83,7 @@ class RentData extends Model
     public function scopeLatestYear($query)
     {
         $latestYear = self::max('year');
+
         return $query->where('year', $latestYear);
     }
 }
