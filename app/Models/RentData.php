@@ -2,7 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\ConstructionPeriodEnum;
+use App\ValueObjects\GeometryPoint;
+use App\ValueObjects\GeometryShape;
 use App\ValueObjects\Money;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,29 +20,31 @@ class RentData extends Model
 {
     use HasFactory;
 
-    protected $table = 'rent_data';
-
     protected $fillable = [
-        'geographic_sector',        // Secteurs géographiques
-        'district_number',          // Numéro du quartier
-        'district_name',            // Nom du quartier
-        'number_of_rooms',          // Nombre de pièces principales
-        'construction_period',      // Epoque de construction
-        'rental_type',              // Type de location (meublé/non meublé)
-        'reference_rent',           // Loyers de référence (average)
-        'maximum_rent',             // Loyers de référence majorés (max)
-        'minimum_rent',             // Loyers de référence minorés (min)
-        'year',                     // Année
-        'city',                     // Ville
+        'geographic_sector',
+        'district_number',
+        'district_name',
+        'number_of_rooms',
+        'construction_period',
+        'rental_type',
+        'reference_rent',
+        'maximum_rent',
+        'minimum_rent',
+        'year',
+        'city',
+        'geometry_shape',
+        'geometry_point',
     ];
 
     protected $casts = [
         'district_number' => 'integer',
         'number_of_rooms' => 'integer',
+        'construction_period' => ConstructionPeriodEnum::class,
         'reference_rent' => Money::class,
         'maximum_rent' => Money::class,
         'minimum_rent' => Money::class,
         'year' => 'integer',
+        'geometry_shape' => GeometryShape::class,
     ];
 
     /**
@@ -49,41 +56,28 @@ class RentData extends Model
         return $this->belongsTo(District::class, 'district_number', 'district_number');
     }
 
-    /**
-     * Scope to filter by number of rooms
-     */
-    public function scopeByRooms($query, int $rooms)
+    public function geometryPoint(): Attribute
     {
-        return $query->where('number_of_rooms', $rooms);
+        return Attribute::make(
+            get: fn () => new GeometryPoint($this->longitude, $this->latitude),
+            set: fn (GeometryPoint $value) => [
+                'longitude' => $value->longitude,
+                'latitude' => $value->latitude,
+            ]
+        );
     }
 
-    /**
-     * Scope to filter by construction period
-     */
-    public function scopeByConstructionPeriod($query, string $period)
+    public function scopeWhereGeometry(Builder $query, ...$args)
     {
-        return $query->where('construction_period', $period);
-    }
+        if (count($args) === 1 && is_array($args[0]) && count($args[0]) === 2) {
+            return $query->whereRaw("ST_Contains(geometry_shape, ST_GeomFromText('POINT({$args[0][1]} {$args[0][0]})'))");
+        }
 
-    /**
-     * Scope to filter by rental type
-     *
-     * @param  bool  $furnished  true for "meublé", false for "non meublé"
-     */
-    public function scopeByFurnished($query, bool $furnished)
-    {
-        $rentalType = $furnished ? 'meublé' : 'non meublé';
+        if (count($args) === 2 && is_float($args[0]) && is_float($args[1])) {
+            return $query->whereRaw("ST_Contains(geometry_shape, ST_GeomFromText('POINT({$args[1]} {$args[0]})'))");
+        }
 
-        return $query->where('rental_type', $rentalType);
-    }
-
-    /**
-     * Scope to get latest year data
-     */
-    public function scopeLatestYear($query)
-    {
-        $latestYear = self::max('year');
-
-        return $query->where('year', $latestYear);
+        // todo use logger if needed here for invalid args or throw error.
+        return $query;
     }
 }

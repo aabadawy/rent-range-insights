@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ConstructionPeriodEnum;
 use App\Models\District;
 use App\Models\RentData;
 use App\ValueObjects\Money;
@@ -46,10 +47,10 @@ describe('Import Districts', function () {
         // Check that coordinates were split correctly
         expect($district->latitude)->toBeNumeric()
             ->and($district->longitude)->toBeNumeric()
-            ->and($district->latitude)->toBeGreaterThan(48.0)
-            ->and($district->latitude)->toBeLessThan(49.0)
-            ->and($district->longitude)->toBeGreaterThan(2.0)
-            ->and($district->longitude)->toBeLessThan(3.0);
+            ->and($district->longitude)->toBeGreaterThan(48.0)
+            ->and($district->longitude)->toBeLessThan(49.0)
+            ->and($district->latitude)->toBeGreaterThan(2.0)
+            ->and($district->latitude)->toBeLessThan(3.0);
     });
 
     test('it creates unique district_section_numbers', function () {
@@ -78,7 +79,7 @@ describe('Import Rent Data', function () {
         // Check a specific rent record
         $rentData = RentData::where('district_number', 50)
             ->where('number_of_rooms', 1)
-            ->where('construction_period', 'Apres 1990')
+            ->where('construction_period', ConstructionPeriodEnum::After1990)
             ->where('rental_type', 'non meublé')
             ->first();
 
@@ -169,7 +170,7 @@ describe('Import Rent Data', function () {
 
         // Should have multiple construction periods
         expect($periods->count())->toBeGreaterThan(1)
-            ->and($periods->contains('Apres 1990'))->toBeTrue();
+            ->and($periods->contains(ConstructionPeriodEnum::After1990))->toBeTrue();
     });
 
     test('it imports different room counts correctly', function () {

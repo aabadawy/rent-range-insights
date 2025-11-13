@@ -2,8 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ConstructionPeriodEnum;
 use App\Models\District;
 use App\Models\RentData;
+use App\ValueObjects\GeometryPoint;
+use App\ValueObjects\GeometryShape;
 use App\ValueObjects\Money;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -78,9 +81,8 @@ class ImportDataCommand extends Command
         }
 
         if ($importDistricts) {
-            DB::table('district_boundaries')->truncate();
             DB::table('districts')->truncate();
-            $this->warn('🗑️  Truncated districts and district_boundaries tables');
+            $this->warn('🗑️  Truncated districts');
         }
     }
 
@@ -114,10 +116,12 @@ class ImportDataCommand extends Command
                 }
 
                 // Parse coordinates
-                $coordinates = explode(',', $data['Geometry X Y']);
+                $coordinates = str_contains($data['Geometry X Y'], ',') ?
+                    explode(',', $data['Geometry X Y']) : explode(';', $data['Geometry X Y']);
                 $latitude = isset($coordinates[0]) ? (float) trim($coordinates[0]) : null;
                 $longitude = isset($coordinates[1]) ? (float) trim($coordinates[1]) : null;
 
+                $geoPoint = GeometryPoint::make($latitude, $longitude);
                 $data = [
                     'district_section_number' => $data['N_SQ_QU'],
                     'district_number' => $districtNumber,
@@ -128,11 +132,9 @@ class ImportDataCommand extends Command
                     'perimeter' => $data['PERIMETRE'] ?: null,
                     'surface_area' => $data['SURFACE'] ?: null,
                     'geometry_coordinates' => $data['Geometry X Y'],
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
+                    'latitude' => $geoPoint->latitude,
+                    'longitude' => $geoPoint->longitude,
                     'postal_code' => $data['ZIP CODE'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ];
                 District::create($data);
 
@@ -171,11 +173,12 @@ class ImportDataCommand extends Command
             try {
                 $data = array_combine($headers, $row);
 
+                $constructionPeriod = $this->getConstructionPeriod($data['Epoque de construction']);
                 // Create unique hash to prevent duplicates
                 $uniqueHash = md5(
                     $data['Numéro du quartier'].
                     $data['Nombre de pièces principales'].
-                    $data['Epoque de construction'].
+                    $constructionPeriod->value.
                     $data['Type de location'].
                     $data['Année']
                 );
@@ -190,7 +193,7 @@ class ImportDataCommand extends Command
                 // Check if exists in database (idempotency)
                 $exists = RentData::where('district_number', (int) $data['Numéro du quartier'])
                     ->where('number_of_rooms', (int) $data['Nombre de pièces principales'])
-                    ->where('construction_period', $data['Epoque de construction'])
+                    ->where('construction_period', $constructionPeriod)
                     ->where('rental_type', $data['Type de location'] === 'meublé')
                     ->where('year', (int) $data['Année'])
                     ->exists();
@@ -202,20 +205,22 @@ class ImportDataCommand extends Command
                     continue;
                 }
 
+                $geoPoint = GeometryPoint::make($data['geo_point_2d']);
+
                 $data = [
                     'geographic_sector' => $data['Secteurs géographiques'] ?: null,
                     'district_number' => (int) $data['Numéro du quartier'],
                     'district_name' => $data['Nom du quartier'],
                     'number_of_rooms' => (int) $data['Nombre de pièces principales'],
-                    'construction_period' => $data['Epoque de construction'],
+                    'construction_period' => $constructionPeriod,
                     'rental_type' => $data['Type de location'] === 'meublé',
                     'reference_rent' => Money::make(data_get($data, 'Loyers de référence', 0)),
                     'maximum_rent' => Money::make(data_get($data, 'Loyers de référence majorés', 0)),
                     'minimum_rent' => Money::make(data_get($data, 'Loyers de référence minorés', 0)),
                     'year' => (int) $data['Année'],
                     'city' => $data['Ville'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'geometry_shape' => GeometryShape::fromJson($data['geo_shape']),
+                    'geometry_point' => $geoPoint,
                 ];
 
                 $processedHashes[$uniqueHash] = true;
@@ -225,9 +230,10 @@ class ImportDataCommand extends Command
                 $this->importedCount++;
             } catch (\Exception $e) {
                 $this->failedCount++;
-                Log::error("Failed to import rent data row {$rowNumber}", [
+
+                logger()->error("Failed to import rent data row {$rowNumber}", [
                     'error' => $e->getMessage(),
-                    'row' => $row ?? null,
+                    'row' => $row,
                 ]);
             }
         }
@@ -272,5 +278,10 @@ class ImportDataCommand extends Command
         }
 
         return self::DISTRICTS_CSV;
+    }
+
+    private function getConstructionPeriod(string $rawConstructionPeriod): ConstructionPeriodEnum
+    {
+        return ConstructionPeriodEnum::fromString($rawConstructionPeriod);
     }
 }
