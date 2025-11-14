@@ -12,10 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * RentData Model (Données de loyer)
- * Represents rent control data for Paris districts
- */
 class RentData extends Model
 {
     use HasFactory;
@@ -69,15 +65,11 @@ class RentData extends Model
 
     public function scopeWhereGeometry(Builder $query, ...$args)
     {
-        if (count($args) === 1 && is_array($args[0]) && count($args[0]) === 2) {
-            return $query->whereRaw("ST_Contains(geometry_shape, ST_GeomFromText('POINT({$args[0][1]} {$args[0][0]})'))");
-        }
+        [$long, $lat] = match (true) {
+            count($args) === 1 && is_array($args[0]) && count($args[0]) === 2 => [$args[0][0], $args[0][1]],
+            count($args) === 2 => [$args[0], $args[1]],
+        };
 
-        if (count($args) === 2 && is_float($args[0]) && is_float($args[1])) {
-            return $query->whereRaw("ST_Contains(geometry_shape, ST_GeomFromText('POINT({$args[1]} {$args[0]})'))");
-        }
-
-        // todo use logger if needed here for invalid args or throw error.
-        return $query;
+        return $query->whereRaw(sprintf("ST_Intersects(geometry_shape, ST_GeomFromText('%s', 4326))", "POINT($long $lat)"));
     }
 }

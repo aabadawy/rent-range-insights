@@ -6,8 +6,9 @@ use App\Casts\MoneyCast;
 use App\Enums\Currency;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Responsable;
 
-class Money implements Arrayable, Castable
+class Money implements Arrayable, Castable, Responsable
 {
     protected int $amount;
 
@@ -60,5 +61,10 @@ class Money implements Arrayable, Castable
             'value' => $this->value(),
             'currency' => $this->currency->value,
         ];
+    }
+
+    public function toResponse($request)
+    {
+        return $this->toArray();
     }
 }

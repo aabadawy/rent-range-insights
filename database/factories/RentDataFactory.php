@@ -2,12 +2,24 @@
 
 namespace Database\Factories;
 
+use App\Models\District;
 use App\Models\RentData;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RentDataFactory extends Factory
 {
     protected $model = RentData::class;
+
+    public function configure()
+    {
+        return $this->afterCreating(function (RentData $rentData) {
+            if ($rentData->district()->doesntExist()) {
+                District::factory()->createOne([
+                    'district_number' => $rentData->district_number,
+                ]);
+            }
+        });
+    }
 
     public function definition(): array
     {

@@ -10,15 +10,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class DistrictFactory extends Factory
 {
-    public function configure()
-    {
-        return $this->afterCreating(function (District $district) {
-            $district->boundaries()->createMany([
-                ['latitude' => 2.3, 'longitude' => 48.85, 'sequence_order' => 1],
-            ]);
-        });
-    }
-
     /**
      * Define the model's default state.
      *

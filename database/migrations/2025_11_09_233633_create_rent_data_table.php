@@ -36,7 +36,7 @@ return new class extends Migration
 
             $table->string('city')->default('PARIS');
 
-            $table->geometry('geometry_shape')->spatialIndex();
+            $table->geometry('geometry_shape', srid: 4326)->spatialIndex();
 
             $table->decimal('latitude', 10, 8)->index();
 
