@@ -90,7 +90,8 @@ test('it should return the rent insights when filter by coordinates', function (
             ],
             [
                 'maximum_rent' => Money::make(999),
-                'minimum_rent' => Money::make(10),
+                'minimum_rent' => Money::make(401_0000),
+                'reference_rent' => Money::make(761_0000),
                 'geometry_shape' => $coordinates2 = GeometryShape::fromJson(
                     file_get_contents(base_path('tests/Fixtures/Coordinates/2.json'))
                 ),
@@ -110,7 +111,7 @@ test('it should return the rent insights when filter by coordinates', function (
             return $json->hasAll('data.max_rent', 'data.min_rent', 'data.average_rent')
                 ->where('data.max_rent', (int) $expectedMaxRent->toEuro())
                 ->where('data.min_rent', (int) $expectedMinRent->toEuro())
-                ->where('data.average_rent', (750 + 761) / 2)
+                ->where('data.average_rent', Money::make((750 + 761 + 761) / 3, true)->toEuro())
                 ->etc();
         });
 

@@ -80,7 +80,7 @@ describe('Import Rent Data', function () {
         $rentData = RentData::where('district_number', 50)
             ->where('number_of_rooms', 1)
             ->where('construction_period', ConstructionPeriodEnum::After1990)
-            ->where('rental_type', 'non meublé')
+            ->where('rental_type', false)
             ->first();
 
         expect($rentData)->not->toBeNull()
@@ -99,8 +99,8 @@ describe('Import Rent Data', function () {
         expect($rentData->reference_rent)->toBeInstanceOf(Money::class)
             ->and($rentData->maximum_rent)->toBeInstanceOf(Money::class)
             ->and($rentData->minimum_rent)->toBeInstanceOf(Money::class)
-            ->and($rentData->reference_rent->value())->toBeFloat()
-            ->and($rentData->reference_rent->value())->toBeGreaterThan(0)
+            ->and($rentData->reference_rent->euro())->toBeFloat()
+            ->and($rentData->reference_rent->euro())->toBeGreaterThan(0)
             ->and($rentData->reference_rent->amount())->toBeInt();
 
         // Assert values are correct (from CSV: 23.0, 27.6, 16.1)
@@ -118,7 +118,7 @@ describe('Import Rent Data', function () {
             // Example: 23.0 EUR => 230000 (internal storage)
             $internalValue = $rentData->getAttributes()['reference_rent'];
             expect($internalValue)->toBeInt()
-                ->and($rentData->reference_rent->value())->toBeFloat();
+                ->and($rentData->reference_rent->euro())->toBeFloat();
 
             // When accessed through a Money object, should convert back to float
         }
@@ -155,8 +155,8 @@ describe('Import Rent Data', function () {
     test('it imports different rental types correctly', function () {
         Artisan::call('data:import', ['--rent' => true]);
 
-        $furnished = RentData::where('rental_type', 'meublé')->count();
-        $unfurnished = RentData::where('rental_type', 'non meublé')->count();
+        $furnished = RentData::where('rental_type', true)->count();
+        $unfurnished = RentData::where('rental_type', false)->count();
 
         // Both types should exist
         expect($furnished)->toBeGreaterThan(0)

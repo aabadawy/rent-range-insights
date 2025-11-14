@@ -10,48 +10,44 @@ use Illuminate\Contracts\Support\Responsable;
 
 class Money implements Arrayable, Castable, Responsable
 {
-    protected int $amount;
-
-    protected Currency $currency;
+    protected int $cents;
 
     const ROUND = 10000;
 
-    public function __construct(int|float $amount, Currency|string $currency = Currency::EUR)
+    public function __construct(protected int|float $rawAmount, protected bool $isCent = true)
     {
-        $this->currency = $currency instanceof Currency ? $currency : Currency::from($currency);
-
-        $this->convertAmountToInt($amount);
+        $this->convertToCent();
     }
 
-    public function value(): float
+    public function euro(): float
     {
-        return $this->amount / self::ROUND;
+        return $this->cents / self::ROUND;
     }
 
     public function toEuro(): float
     {
-        return $this->value();
+        return $this->euro();
     }
 
     public function amount(): int
     {
-        return $this->amount;
+        return $this->cents;
     }
 
-    private function convertAmountToInt(int|float $amount): void
+    private function convertToCent(): void
     {
-        if (is_int($amount) || (is_float($amount) && $amount === floor($amount))) {
-            $this->amount = $amount;
+        if ($this->isCent) {
+            $this->cents = (int) $this->rawAmount;
 
             return;
         }
 
-        $this->amount = (int) ($amount * self::ROUND);
+        $this->cents = (int) ($this->rawAmount * self::ROUND);
     }
 
-    public static function make(int|float $amount, Currency|string $currency = Currency::EUR): self
+    public static function make(int|float $amount, bool $convertToAmount = false): self
     {
-        return new self($amount, $currency);
+        return new self($amount, $convertToAmount);
     }
 
     public static function castUsing(array $arguments): string
@@ -62,9 +58,9 @@ class Money implements Arrayable, Castable, Responsable
     public function toArray(): array
     {
         return [
-            'amount' => $this->amount(),
-            'value' => $this->value(),
-            'currency' => $this->currency->value,
+            'cents' => $this->cents,
+            'euro' => $this->euro(),
+            'currency' => Currency::EUR->value,
         ];
     }
 

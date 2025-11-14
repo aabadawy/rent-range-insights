@@ -38,11 +38,14 @@ class RentInsightsController extends Controller
                 'min_rent' => Money::class,
                 'average_rent' => Money::class,
             ])
+//            ->ddRawSql()
             ->first()
             ->only('max_rent', 'min_rent', 'average_rent');
 
+        //        dd($result);
+        //        dd($result["average_rent"]->toEuro());
         return response()->json([
-            'data' => collect($result)->map(fn ($value) => $value->toEuro()),
+            'data' => collect($result)->map(fn (Money $value) => $value->toEuro()),
         ]);
     }
 }
