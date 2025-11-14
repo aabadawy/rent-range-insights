@@ -28,6 +28,11 @@ class Money implements Arrayable, Castable, Responsable
         return $this->amount / self::ROUND;
     }
 
+    public function toEuro(): float
+    {
+        return $this->value();
+    }
+
     public function amount(): int
     {
         return $this->amount;
@@ -35,7 +40,7 @@ class Money implements Arrayable, Castable, Responsable
 
     private function convertAmountToInt(int|float $amount): void
     {
-        if (is_int($amount)) {
+        if (is_int($amount) || (is_float($amount) && $amount === floor($amount))) {
             $this->amount = $amount;
 
             return;

@@ -15,6 +15,10 @@ class MoneyCast implements CastsAttributes
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
+        if (is_null($value)) {
+            return Money::make(0);
+        }
+
         return Money::make($value);
     }
 

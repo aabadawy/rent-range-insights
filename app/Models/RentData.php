@@ -70,6 +70,13 @@ class RentData extends Model
             count($args) === 2 => [$args[0], $args[1]],
         };
 
+        return $query->whereRaw(
+            'ST_DWithin(geometry_shape::geography,ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,?)',
+            [$long, $lat, 1000]
+        );
+
         return $query->whereRaw(sprintf("ST_Intersects(geometry_shape, ST_GeomFromText('%s', 4326))", "POINT($long $lat)"));
+
+        return $query->whereRaw(sprintf('ST_Distance_Sphere(%s, POINT(longitude, latitude)) <= 10000', "POINT($long, $lat)"));
     }
 }

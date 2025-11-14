@@ -13,10 +13,17 @@ readonly class GeometryShape implements Castable
         public bool $longitudeFirst = true
     ) {
         $this->validate();
+        //        dd($this->coordinates);
     }
 
     public static function fromJson(string $json): self
     {
+        // Convert all numeric values to strings before decoding
+        $json = preg_replace_callback('/([-]?\d+\.\d+)/', function ($match) {
+            return '"'.$match[1].'"';
+        }, $json);
+
+        //        dd($json);
         $data = json_decode($json, true);
         if (! isset($data['coordinates']) || $data['type'] !== 'Polygon') {
             throw new \InvalidArgumentException('Invalid GeoJSON format.');

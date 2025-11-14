@@ -32,7 +32,7 @@ class RentInsightsController extends Controller
             ->where('construction_period', ConstructionPeriodEnum::fromString($request->input('construction_period')))
             ->where('number_of_rooms', $request->input('number_of_rooms'))
             ->where('rental_type', $request->boolean('furnished'))
-            ->selectRaw('MAX(maximum_rent) as max_rent, MIN(minimum_rent) as min_rent, AVG(reference_rent) as average_rent')
+            ->selectRaw('MAX(maximum_rent) as max_rent, MIN(minimum_rent) as min_rent, AVG(reference_rent)::NUMERIC(10,2) as average_rent')
             ->withCasts([
                 'max_rent' => Money::class,
                 'min_rent' => Money::class,
@@ -42,7 +42,7 @@ class RentInsightsController extends Controller
             ->only('max_rent', 'min_rent', 'average_rent');
 
         return response()->json([
-            'data' => collect($result)->map(fn ($value) => $value->amount()),
+            'data' => collect($result)->map(fn ($value) => $value->toEuro()),
         ]);
     }
 }

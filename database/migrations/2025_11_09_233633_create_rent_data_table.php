@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,10 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::raw(
+            "CREATE EXTENSION IF NOT EXISTS postgis;"
+        );
         Schema::create('rent_data', function (Blueprint $table) {
             $table->id();
-
-            $table->string('geographic_sector')->nullable();
 
             $table->integer('district_number')->index();
 
@@ -26,7 +28,7 @@ return new class extends Migration
 
             $table->boolean('rental_type')->default(true)->index();
 
-            $table->bigInteger('reference_rent')->nullable();
+            $table->bigInteger('reference_rent')->nullable()->index();
 
             $table->bigInteger('maximum_rent')->nullable()->index();
 
@@ -35,6 +37,8 @@ return new class extends Migration
             $table->year('year')->index();
 
             $table->string('city')->default('PARIS');
+
+            $table->string('geographic_sector')->nullable();
 
             $table->geometry('geometry_shape', srid: 4326)->spatialIndex();
 
