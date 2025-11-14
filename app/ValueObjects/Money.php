@@ -45,9 +45,9 @@ class Money implements Arrayable, Castable, Responsable
         $this->cents = (int) ($this->rawAmount * self::ROUND);
     }
 
-    public static function make(int|float $amount, bool $convertToAmount = false): self
+    public static function make(int|float $amount, bool $isCent = true): self
     {
-        return new self($amount, $convertToAmount);
+        return new self($amount, $isCent);
     }
 
     public static function castUsing(array $arguments): string

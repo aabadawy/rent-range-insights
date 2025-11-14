@@ -111,7 +111,7 @@ test('it should return the rent insights when filter by coordinates', function (
             return $json->hasAll('data.max_rent', 'data.min_rent', 'data.average_rent')
                 ->where('data.max_rent', (int) $expectedMaxRent->toEuro())
                 ->where('data.min_rent', (int) $expectedMinRent->toEuro())
-                ->where('data.average_rent', Money::make((750 + 761 + 761) / 3, true)->toEuro())
+                ->where('data.average_rent', Money::make((750 + 761 + 761) / 3, false)->toEuro())
                 ->etc();
         });
 
