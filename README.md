@@ -255,7 +255,7 @@ Contains rent control data with spatial geometry.
 | `minimum_rent` | bigint | Reference minimum (cents/m²) | ✓ |
 | `year` | year | Data year | ✓ |
 | `geometry_shape` | geometry | District boundary polygon (SRID 4326) | ✓ (spatial) |
-| `unit_md5` | binary | a unique key combining the unit data to prevent duplicates | ✓ |
+| `unit_md5` | binary | a unique key combining the unit data to prevent duplicates | ✓ (unique) |
 | `latitude` | decimal(10,8) | Center latitude | ✓ |
 | `longitude` | decimal(11,8) | Center longitude | ✓ |
 | `created_at` | timestamp | Creation time | |
