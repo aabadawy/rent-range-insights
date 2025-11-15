@@ -12,10 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::raw(
-            'CREATE EXTENSION IF NOT EXISTS postgis;'
-        );
-        Schema::create('rent_data', function (Blueprint $table) {
+        Schema::create('units', function (Blueprint $table) {
             $table->id();
 
             $table->integer('district_number')->index();
@@ -63,6 +60,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rent_data');
+        Schema::dropIfExists('units');
     }
 };

@@ -42,7 +42,7 @@ class District extends Model
      */
     public function rentData(): HasMany
     {
-        return $this->hasMany(RentData::class, 'district_number', 'district_number');
+        return $this->hasMany(Unit::class, 'district_number', 'district_number');
     }
 
     /**

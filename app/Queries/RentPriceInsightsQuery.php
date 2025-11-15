@@ -4,7 +4,7 @@ namespace App\Queries;
 
 use App\Enums\ConstructionPeriodEnum;
 use App\Models\District;
-use App\Models\RentData;
+use App\Models\Unit;
 use App\ValueObjects\Money;
 
 readonly class RentPriceInsightsQuery
@@ -19,7 +19,7 @@ readonly class RentPriceInsightsQuery
 
     public function execute(): array
     {
-        $rawData = RentData::query()
+        $rawData = Unit::query()
             ->when(
                 $this->resolveDistrictNumber(),
                 fn ($q) => $q->where('district_number', $this->resolveDistrictNumber()),

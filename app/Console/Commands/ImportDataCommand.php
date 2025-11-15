@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\ConstructionPeriodEnum;
 use App\Importers\SimpleCsvReader;
 use App\Models\District;
-use App\Models\RentData;
+use App\Models\Unit;
 use App\ValueObjects\GeometryPoint;
 use App\ValueObjects\GeometryShape;
 use App\ValueObjects\Money;
@@ -16,7 +16,7 @@ class ImportDataCommand extends Command
 {
     protected $signature = 'data:import
                             {--districts : Import only districts data}
-                            {--rent : Import only rent data}
+                            {--units : Import only units data}
                             {--force : Force reimport (truncate tables)}';
 
     protected $description = 'Import rent control data from CSV files with idempotency and memory optimization';
@@ -30,8 +30,8 @@ class ImportDataCommand extends Command
         $this->info('🚀 Starting import process...');
 
         try {
-            $importDistricts = $this->option('districts') || (! $this->option('districts') && ! $this->option('rent'));
-            $importRent = $this->option('rent') || (! $this->option('districts') && ! $this->option('rent'));
+            $importDistricts = $this->option('districts') || (! $this->option('districts') && ! $this->option('units'));
+            $importRent = $this->option('units') || (! $this->option('districts') && ! $this->option('units'));
 
             if ($this->option('force')) {
                 $this->handleForceOption($importDistricts, $importRent);
@@ -162,7 +162,7 @@ class ImportDataCommand extends Command
             ]);
     }
 
-    private function createUnit(array $row): RentData
+    private function createUnit(array $row): Unit
     {
         $constructionPeriod = $this->getConstructionPeriod($row['Epoque de construction']);
 
@@ -188,6 +188,6 @@ class ImportDataCommand extends Command
             $row['Numéro du quartier'].$row['Nombre de pièces principales'].$constructionPeriod->value.($row['Type de location'] === 'meublé').$row['Année']
         ));
 
-        return RentData::query()->firstOrCreate(['unit_md5' => $uniqueUnitNumber], $data);
+        return Unit::query()->firstOrCreate(['unit_md5' => $uniqueUnitNumber], $data);
     }
 }

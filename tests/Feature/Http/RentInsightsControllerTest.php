@@ -2,7 +2,7 @@
 
 use App\Enums\ConstructionPeriodEnum;
 use App\Models\District;
-use App\Models\RentData;
+use App\Models\Unit;
 use App\ValueObjects\GeometryPoint;
 use App\ValueObjects\GeometryShape;
 use App\ValueObjects\Money;
@@ -14,7 +14,7 @@ uses(LazilyRefreshDatabase::class);
 test('it should return the rent insights when filter by postal code', function () {
     $district = District::factory()->create(['postal_code' => '75001']);
 
-    RentData::factory()
+    Unit::factory()
         ->for($district)
         ->state([
             'construction_period' => ConstructionPeriodEnum::fromString('1946-1970'),
@@ -69,7 +69,7 @@ test('it should return the rent insights when filter by coordinates', function (
         'latitude' => $geoShape->coordinates[0][0][1],
     ]);
 
-    RentData::factory()
+    Unit::factory()
         ->for($district)
         ->state([
             'construction_period' => ConstructionPeriodEnum::fromString('1946-1970'),
