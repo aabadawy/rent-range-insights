@@ -211,12 +211,9 @@ app/
 ├── Queries/
 │   └── RentInsightsQueryHandler.php      # Read logic
 ├── ValueObjects/
-│   ├── Coordinates.php                   # Coordinate pair
 │   ├── GeometryPoint.php                 # Single point
 │   ├── GeometryShape.php                 # Polygon
 │   └── Money.php                         # Monetary value
-└── Repositories/
-    └── UnitRepository.php                # Data access
 ```
 
 ---
@@ -258,6 +255,7 @@ Contains rent control data with spatial geometry.
 | `minimum_rent` | bigint | Reference minimum (cents/m²) | ✓ |
 | `year` | year | Data year | ✓ |
 | `geometry_shape` | geometry | District boundary polygon (SRID 4326) | ✓ (spatial) |
+| `unit_md5` | binary | a unique key combining the unit data to prevent duplicates | ✓ |
 | `latitude` | decimal(10,8) | Center latitude | ✓ |
 | `longitude` | decimal(11,8) | Center longitude | ✓ |
 | `created_at` | timestamp | Creation time | |
@@ -336,7 +334,7 @@ Returns minimum, average, and maximum rent for a location with optional filters.
 
 #### Query Parameters
 
-**Location** (one required):
+**Location** (postal_code or coordinates should be filled):
 
 | Parameter | Type | Required | Description | Example |
 |-----------|------|----------|-------------|---------|
@@ -345,42 +343,20 @@ Returns minimum, average, and maximum rent for a location with optional filters.
 | `latitude` | float | conditional | Latitude (requires longitude) | `48.8566` |
 | `longitude` | float | conditional | Longitude (requires latitude) | `2.3522` |
 
-**Filters** (all optional):
-
-| Parameter | Type | Description | Values |
-|-----------|------|-------------|--------|
-| `number_of_rooms` | integer | Number of rooms | `1-6` |
-| `construction_period` | string | Construction era | `before_1946`, `1946_1970`, `1971_1990`, `after_1990` |
-| `furnished` | boolean | Furnishing status | `true`, `false` |
-| `year` | integer | Data year | `2019-2025` |
-
 #### Examples
 
-##### Example 1: Postal Code Only
 
-```bash
-curl -X GET "http://localhost:8000/api/rent-insights?postal_code=75014" \
-     -H "Accept: application/json"
-```
-
-##### Example 2: Full Query with Filters
+##### Example 1: Full Query with Filters & postal_code
 
 ```bash
 curl -X GET "http://localhost:8000/api/rent-insights?postal_code=75001&construction_period=1946_1970&number_of_rooms=2&furnished=true" \
      -H "Accept: application/json"
 ```
 
-##### Example 3: Coordinates
+##### Example 3: Full Query with Filters & Coordinates
 
 ```bash
-curl -X GET "http://localhost:8000/api/rent-insights?coordinates=48.8566,2.3522&number_of_rooms=3" \
-     -H "Accept: application/json"
-```
-
-##### Example 4: Separate Lat/Lng
-
-```bash
-curl -X GET "http://localhost:8000/api/rent-insights?latitude=48.8566&longitude=2.3522&furnished=false" \
+curl -X GET "http://localhost:8000/api/rent-insights?coordinates=48.8566,2.3522&construction_period=1946_1970&number_of_rooms=2&furnished=true" \
      -H "Accept: application/json"
 ```
 
@@ -431,14 +407,6 @@ curl -X GET "http://localhost:8000/api/rent-insights?latitude=48.8566&longitude=
 }
 ```
 
-##### Invalid Coordinates (400)
-
-```json
-{
-  "error": "Coordinates are outside Paris boundaries"
-}
-```
-
 ---
 
 ## Testing
@@ -461,16 +429,8 @@ php artisan test --filter=RentInsightsApiTest
 ```
 tests/
 ├── Feature/
-│   ├── RentInsightsApiTest.php
 │   └── ImportCommandsTest.php
-└── Unit/
-    ├── ValueObjects/
-    │   ├── CoordinatesTest.php
-    │   ├── GeometryPointTest.php
-    │   ├── GeometryShapeTest.php
-    │   └── MoneyTest.php
-    └── Queries/
-        └── RentInsightsQueryHandlerTest.php
+|   └── RentInsightsController.php
 ```
 
 ### Example Test
@@ -524,20 +484,10 @@ CREATE SPATIAL INDEX spatial_idx ON units(geometry_shape);
 
 2. **Composite Index**: Optimizes filtered searches
 ```sql
-CREATE INDEX units_search_idx ON units(
+CREATE INDEX rent_search_index ON units(
     district_number, number_of_rooms, 
     construction_period, rental_type
 );
-```
-
-3. **Caching**: Postal code lookups cached for 24 hours
-```php
-Cache::remember("districts_{$postalCode}", 86400, ...);
-```
-
-4. **Query Chunking**: Import processes 1000 rows at a time
-```php
-$this->importInChunks($data, 1000);
 ```
 
 ---
@@ -548,5 +498,4 @@ $this->importInChunks($data, 1000);
 
 - [ ] **API Response Caching**: Cache rent insights for 1 hour to reduce database load
 - [ ] **Rate Limiting**: Implement throttling (60 requests/minute per IP)
-- [ ] **Additional Filters**: 
-  - Property type (apartment, house, studi
+- [ ] Unit tests for VOs and Query classes
