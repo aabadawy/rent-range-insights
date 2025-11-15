@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::raw(
-            "CREATE EXTENSION IF NOT EXISTS postgis;"
+            'CREATE EXTENSION IF NOT EXISTS postgis;'
         );
         Schema::create('rent_data', function (Blueprint $table) {
             $table->id();
@@ -45,6 +45,11 @@ return new class extends Migration
             $table->decimal('latitude', 10, 8)->index();
 
             $table->decimal('longitude', 11, 8)->index();
+
+            $table->binary('unit_md5', 16)
+                ->generatedAs(DB::raw(
+                    'UNHEX(MD5(CONCAT(district_number, number_of_rooms, construction_period, rental_type, year, city, geographic_sector, latitude, longitude)))'
+                ))->stored()->unique();
 
             $table->timestamps();
 

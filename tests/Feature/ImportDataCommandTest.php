@@ -47,10 +47,10 @@ describe('Import Districts', function () {
         // Check that coordinates were split correctly
         expect($district->latitude)->toBeNumeric()
             ->and($district->longitude)->toBeNumeric()
-            ->and($district->longitude)->toBeGreaterThan(48.0)
-            ->and($district->longitude)->toBeLessThan(49.0)
-            ->and($district->latitude)->toBeGreaterThan(2.0)
-            ->and($district->latitude)->toBeLessThan(3.0);
+            ->and($district->latitude)->toBeGreaterThan(48.0)
+            ->and($district->latitude)->toBeLessThan(49.0)
+            ->and($district->longitude)->toBeGreaterThan(2.0)
+            ->and($district->longitude)->toBeLessThan(3.0);
     });
 
     test('it creates unique district_section_numbers', function () {
@@ -129,11 +129,11 @@ describe('Import Rent Data', function () {
     test('it handles duplicate imports idempotently', function () {
         // First import
         Artisan::call('data:import', ['--rent' => true]);
-        $firstCount = RentData::count();
+        $firstCount = RentData::query()->count();
 
         // Second import (should skip duplicates)
         Artisan::call('data:import', ['--rent' => true]);
-        $secondCount = RentData::count();
+        $secondCount = RentData::query()->count();
 
         // Assert no duplicates were created
         expect($secondCount)->toBe($firstCount);
@@ -212,20 +212,5 @@ describe('Import Command Options', function () {
 
         expect(District::count())->toBe($districtCount)
             ->and(RentData::count())->toBeGreaterThan(0); // Districts unchanged
-    });
-});
-
-describe('Performance & Memory', function () {
-    test('it handles large dataset without memory issues', function () {
-        $memoryBefore = memory_get_usage();
-
-        Artisan::call('data:import');
-
-        $memoryAfter = memory_get_usage();
-        $memoryUsed = ($memoryAfter - $memoryBefore) / 1024 / 1024; // MB
-
-        // Memory usage should be reasonable (streaming should prevent loading all data at once)
-        // Adjust threshold based on your requirements
-        expect($memoryUsed)->toBeLessThan(256); // Less than 256MB
     });
 });

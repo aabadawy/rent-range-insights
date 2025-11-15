@@ -14,7 +14,7 @@ uses(LazilyRefreshDatabase::class);
 test('it should return the rent insights when filter by postal code', function () {
     $district = District::factory()->create(['postal_code' => '75001']);
 
-    $rentData = RentData::factory()
+    RentData::factory()
         ->for($district)
         ->state([
             'construction_period' => ConstructionPeriodEnum::fromString('1946-1970'),
@@ -58,10 +58,18 @@ test('it should return the rent insights when filter by postal code', function (
 
     $response->assertStatus(200);
 });
-test('it should return the rent insights when filter by coordinates', function () {
-    $district = District::factory()->create(['postal_code' => '75001']);
 
-    $rentData = RentData::factory()
+test('it should return the rent insights when filter by coordinates', function () {
+    $geoShape = GeometryShape::fromJson(
+        file_get_contents(base_path('tests/Fixtures/Coordinates/1.json'))
+    );
+    $district = District::factory()->create([
+        'postal_code' => '75001',
+        'longitude' => $geoShape->coordinates[0][0][0],
+        'latitude' => $geoShape->coordinates[0][0][1],
+    ]);
+
+    RentData::factory()
         ->for($district)
         ->state([
             'construction_period' => ConstructionPeriodEnum::fromString('1946-1970'),

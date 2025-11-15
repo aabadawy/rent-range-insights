@@ -38,11 +38,14 @@ return new class extends Migration
             // SURFACE - Surface du quartier (square meters)
             $table->decimal('surface_area', 15, 8)->nullable();
 
-            $table->decimal('latitude', 10, 8)->nullable()->index();
             $table->decimal('longitude', 11, 8)->nullable()->index();
+
+            $table->decimal('latitude', 10, 8)->nullable()->index();
 
             // ZIP CODE - Code postal
             $table->string('postal_code', 5)->index();
+
+            $table->index(['longitude', 'latitude'], 'coordinate_index');
 
             $table->timestamps();
         });

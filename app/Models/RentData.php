@@ -34,6 +34,17 @@ class RentData extends Model
         'geometry_point',
     ];
 
+    protected static function booted(): void
+    {
+        parent::saving(function (self $rentData) {
+            $rentData->forceFill([
+                'unit_md5' => hex2bin(md5(
+                    $rentData->district_number.$rentData->number_of_rooms.$rentData->construction_period->value.$rentData->rental_type.$rentData->year.$rentData->city.$rentData->geographic_sector.$rentData->latitude.$rentData->longitude
+                )),
+            ]);
+        });
+    }
+
     protected $casts = [
         'district_number' => 'integer',
         'number_of_rooms' => 'integer',

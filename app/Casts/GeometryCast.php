@@ -22,8 +22,6 @@ class GeometryCast implements CastsAttributes
 
         $geoJson = DB::selectOne('SELECT ST_AsGeoJSON(?) AS geojson', [$value]);
 
-        dd($model->exists, $geoJson);
-
         return GeometryShape::fromJson($geoJson->geojson);
     }
 
@@ -42,7 +40,7 @@ class GeometryCast implements CastsAttributes
 
         $numericCoordinates = array_map(function ($ring) {
             return array_map(function ($point) {
-                return [$point[0], $point[1]];
+                return [(float) $point[0], (float) $point[1]];
             }, $ring);
         }, $geometryShape->coordinates);
 

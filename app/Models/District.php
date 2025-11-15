@@ -67,9 +67,10 @@ class District extends Model
      * Find district by coordinates (within a small range)
      * Uses bounding box for performance
      */
-    public function scopeByCoordinates($query, float $latitude, float $longitude, float $radius = 0.01)
+    public function scopeByCoordinates($query, float $longitude, float $latitude, float $radius = 0.01)
     {
-        return $query->whereBetween('latitude', [$latitude - $radius, $latitude + $radius])
-            ->whereBetween('longitude', [$longitude - $radius, $longitude + $radius]);
+        return $query
+            ->whereBetween('longitude', [$longitude - $radius, $longitude + $radius])
+            ->whereBetween('latitude', [$latitude - $radius, $latitude + $radius]);
     }
 }
